@@ -1,0 +1,16 @@
+# IDE
+.idea/
+.vscode/
+.claude/
+.kiro/
+
+# Build
+target/
+
+# Analysis output
+*.txt
+*.xls
+
+# Temporary files
+nul
+SYNC_FIX.md

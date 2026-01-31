@@ -1,0 +1,125 @@
+server:
+  port: 8459
+
+spring:
+  application:
+    name: daqing-petrochemical-sync
+  
+  # 文件上传配置
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+  
+  # Oracle数据源配置 - 大庆石化Oracle数据库
+  datasource:
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: jdbc:oracle:thin:@//10.114.7.4:1234/egm
+    username: ake
+    password: ake123
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1 FROM DUAL
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+  
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.parkingmanage: DEBUG
+  file:
+    path: ./logs
+    name: ./logs/daqing-sync.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"
+  logback:
+    rollingpolicy:
+      max-file-size: 50MB
+      max-history: 30
+      total-size-cap: 1GB
+
+# Swagger配置
+swagger:
+  basePackage: com.parkingmanage
+  title: 大庆石化数据同步服务
+  description: 大庆石化人员车辆数据同步服务API文档
+  version: V1.0
+
+# 同步服务配置
+sync:
+  # 定时任务配置 (cron表达式，默认每5分钟执行一次)
+  cron: "0 */5 * * * ?"
+  # 是否启用定时同步
+  enabled: true
+  # 同步时间文件存储路径
+  last-sync-time-file: ./data/last-sync-time.txt
+  # 同步历史文件存储路径
+  history-file: ./data/sync-history.json
+  # 最大历史记录数量
+  max-history-count: 100
+
+# 门禁记录同步配置
+gate-record-sync:
+  # 定时任务配置 (cron表达式，默认每1分钟执行一次)
+  cron: "0 */1 * * * ?"
+  # 是否启用定时同步
+  enabled: true
+  # 同步时间文件存储路径
+  last-sync-time-file: ./data/last-gate-record-sync-time.txt
+
+# 威尔门禁系统配置
+well:
+  api:
+    base-url: http://11.114.34.25:8888
+    # 人员接口
+    person-url: /api-general/api-general/open-user/batch/insert-or-update
+    # 删除人员接口
+    person-delete-url: /api-general/api-general/open-user/batch/delete
+    # 人脸接口
+    face-url: /api-face/api-face/open-face/batch/insert
+    # 时段规则列表接口
+    time-rule-list-url: /api-gating/api-gating/open-gating-time-rule/list
+    # 时段规则新增/修改接口
+    time-rule-url: /api-gating/api-gating/open-gating-time-rule/batch/insert-or-update
+    # 人-门授权接口（正式员工使用）
+    grant-url: /api-gating/api-gating/open-gating-grant/batch/insert-or-update
+    # 临时时段授权接口（外来员工、施工人员使用）
+    single-grant-url: /api-gating/api-gating/open-gating-single-grant/batch/insert-or-update
+    # 门禁记录查询接口
+    gate-record-url: /api-gating/api-gating/open-dev-record/list
+    # 认证参数
+    app-key: 18fFD0B702E94D958FC9840109576f2E
+    sign: E5C25AF7D1354E5EA8F7E32B0B20DC7C
+    version: 1.0.0
+  # 默认组织编号
+  default-org-source-no: "001"
+  # 化工西门的所有门禁doorId（包含所有入口和出口）
+  huagong-ximen-door-ids: 934,926,927,930,931,932,933,929,913,922,921,920,919,918,917,923,924,925,914,915,916
+  # 目标场所名称（只同步这个场所的数据）
+  target-place-name: "化工西门"
+
+# AKE停车系统配置
+ake:
+  api:
+    base-url: http://11.114.34.28:8092/vems
+    app-key: F7FE3A3DF4924C2493744E25822BE3AD
+  # 默认操作人
+  default-operator: "系统同步"
+
+# 文件上传路径配置
+file:
+  upload-path: ./uploads

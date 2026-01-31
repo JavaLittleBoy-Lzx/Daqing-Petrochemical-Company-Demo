@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生成绩分析报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        h2 {
+            color: #333;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            font-size: 20px;
+        }
+        
+        h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        /* 统计卡片样式 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .sub {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .stat-card.warning .value {
+            color: #e74c3c;
+        }
+        
+        .stat-card.success .value {
+            color: #27ae60;
+        }
+        
+        /* 表格样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 13px;
+        }
+        
+        table th {
+            background: #3498db;
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        table td {
+            padding: 10px 8px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        
+        table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        table tr.danger {
+            background: #ffe6e6;
+        }
+        
+        table tr.warning-row {
+            background: #fff3cd;
+        }
+        
+        table tr.excellent {
+            background: #d4edda;
+        }
+        
+        /* 徽章样式 */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .badge-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .badge-info {
+            background: #3498db;
+            color: white;
+        }
+        
+        .badge-warning {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .badge-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        /* 分析区域样式 */
+        .analysis-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-danger {
+            background: #ffe6e6;
+            border-left: 4px solid #e74c3c;
+            color: #721c24;
+        }
+        
+        /* 网格布局 */
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .chart-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .chart-card h3 {
+            margin-bottom: 15px;
+        }
+        
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .chart-card canvas {
+            max-height: 300px;
+            min-height: 250px;
+            width: 100% !important;
+            height: 250px !important;
+            flex: 1;
+        }
+        
+        .summary-box {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        /* 进度条样式 */
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .grid-3, .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 22px;
+            }
+            
+            h2 {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📊 学生成绩分析报告</h1>
+    <p class="subtitle">试卷分析 | 数学 + 语文 + 英语 | 共45名学生</p>
+
+    <!-- 总体统计卡片 -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>学生总数</h3>
+            <div class="value">45</div>
+        </div>
+        <div class="stat-card">
+            <h3>数学平均分</h3>
+            <div class="value" id="mathAvg">-</div>
+            <div class="sub" id="mathInfo">-</div>
+        </div>
+        <div class="stat-card">
+            <h3>语文平均分</h3>
+            <div class="value" id="chineseAvg">-</div>
+            <div class="sub" id="chineseInfo">-</div>
+        </div>
+        <div class="stat-card">
+            <h3>总分平均分</h3>
+            <div class="value" id="totalAvg">-</div>
+            <div class="sub" id="totalInfo">-</div>
+        </div>
+        <div class="stat-card warning">
+            <h3>不及格人数</h3>
+            <div class="value" id="failCount">-</div>
+            <div class="sub">需重点关注</div>
+        </div>
+        <div class="stat-card success">
+            <h3>优秀人数(≥180)</h3>
+            <div class="value" id="excellentCount">-</div>
+            <div class="sub">总分180+</div>
+        </div>
+    </div>
+
+    <h2>⚠️ 重点关注学生（需要帮助）</h2>
+    <div class="analysis-section">
+        <div class="alert alert-danger">
+            <strong>🚨 严重警告：</strong>以下学生成绩严重落后，需要立即干预和个别辅导
+        </div>
+        <table id="criticalTable">
+            <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>数学</th>
+                    <th>语文</th>
+                    <th>总分</th>
+                    <th>班级排名</th>
+                    <th>问题诊断</th>
+                    <th>建议</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <h2>📉 单科不及格学生分析</h2>
+    <div class="grid-3">
+        <div class="analysis-section">
+            <h3 style="color:#e74c3c; margin-bottom:15px;">❌ 数学不及格 (<60分)</h3>
+            <table id="mathFailTable">
+                <thead>
+                    <tr>
+                        <th>姓名</th>
+                        <th>数学</th>
+                        <th>差距</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="analysis-section">
+            <h3 style="color:#e74c3c; margin-bottom:15px;">❌ 语文不及格 (<60分)</h3>
+            <table id="chineseFailTable">
+                <thead>
+                    <tr>
+                        <th>姓名</th>
+                        <th>语文</th>
+                        <th>差距</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="analysis-section">
+            <h3 style="color:#f39c12; margin-bottom:15px;">⚠️ 偏科严重 (差值>25分)</h3>
+            <table id="imbalanceTable">
+                <thead>
+                    <tr>
+                        <th>姓名</th>
+                        <th>数学</th>
+                        <th>语文</th>
+                        <th>差值</th>
+                        <th>偏向</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <h2>📊 试卷难度分析</h2>
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>数学成绩分布</h3>
+            <canvas id="mathDistChart"></canvas>
+            <div class="summary-box" id="mathSummary"></div>
+        </div>
+        <div class="chart-card">
+            <h3>语文成绩分布</h3>
+            <canvas id="chineseDistChart"></canvas>
+            <div class="summary-box" id="chineseSummary"></div>
+        </div>
+    </div>
+
+    <h2>📈 详细统计数据</h2>
+    <div class="analysis-section">
+        <table>
+            <thead>
+                <tr>
+                    <th>统计项</th>
+                    <th>数学</th>
+                    <th>语文</th>
+                    <th>总分</th>
+                </tr>
+            </thead>
+            <tbody id="statsTable"></tbody>
+        </table>
+    </div>
+
+    <h2>🏆 各分数段人数统计</h2>
+    <div class="grid-3">
+        <div class="analysis-section">
+            <h3 style="margin-bottom:15px;">数学分数段</h3>
+            <table id="mathRangeTable">
+                <thead>
+                    <tr>
+                        <th>分数段</th>
+                        <th>人数</th>
+                        <th>占比</th>
+                        <th>分布</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="analysis-section">
+            <h3 style="margin-bottom:15px;">语文分数段</h3>
+            <table id="chineseRangeTable">
+                <thead>
+                    <tr>
+                        <th>分数段</th>
+                        <th>人数</th>
+                        <th>占比</th>
+                        <th>分布</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="analysis-section">
+            <h3 style="margin-bottom:15px;">总分分数段</h3>
+            <table id="totalRangeTable">
+                <thead>
+                    <tr>
+                        <th>分数段</th>
+                        <th>人数</th>
+                        <th>占比</th>
+                        <th>分布</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <h2>📋 全班成绩明细（按总分排名）</h2>
+    <div class="analysis-section">
+        <table id="fullTable">
+            <thead>
+                <tr>
+                    <th>排名</th>
+                    <th>姓名</th>
+                    <th>数学</th>
+                    <th>数学评级</th>
+                    <th>语文</th>
+                    <th>语文评级</th>
+                    <th>总分</th>
+                    <th>与平均分差</th>
+                    <th>综合评价</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <h2>📊 可视化图表</h2>
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>总分分布饼图</h3>
+            <canvas id="totalPieChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>数学vs语文散点图（含趋势线）</h3>
+            <canvas id="scatterChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>前10名学生总分对比</h3>
+            <canvas id="top10Chart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>后10名学生总分对比</h3>
+            <canvas id="bottom10Chart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>及格率与优秀率对比</h3>
+            <canvas id="passRateChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>成绩分布箱线图</h3>
+            <canvas id="boxPlotChart"></canvas>
+        </div>
+    </div>
+
+    <h2>🎯 深度试卷分析</h2>
+    <div class="charts-grid">
+        <div class="chart-card">
+            <h3>偏科分析雷达图</h3>
+            <canvas id="radarChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>偏科严重度分布</h3>
+            <canvas id="biasDistChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>分数段人数对比（数学vs语文）</h3>
+            <canvas id="scoreRangeCompareChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>成绩进步空间分析</h3>
+            <canvas id="improvementChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>双科成绩密度热力分布</h3>
+            <canvas id="heatmapChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>试卷区分度分析</h3>
+            <canvas id="discriminationChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+// 添加错误处理
+window.addEventListener('error', function(e) {
+    console.error('JavaScript错误:', e.message, '在', e.filename, '第', e.lineno, '行');
+});
+
+console.log('开始加载图表...');
+
+// 学生成绩数据
+const students = [
+    {name: "金铭俊", math: 90, chinese: 83, total: 173},
+    {name: "李贞齐", math: 86, chinese: 81, total: 167},
+    {name: "邱周翔", math: 91, chinese: 90, total: 181},
+    {name: "张峻绮", math: 93, chinese: 91, total: 184},
+    {name: "任飞宇", math: 92, chinese: 91, total: 183},
+    {name: "汪珉豪", math: 95, chinese: 96, total: 191.5},
+    {name: "刘鲁麒", math: 90, chinese: 81.5, total: 171.5},
+    {name: "陈楷瑞", math: 60, chinese: 21, total: 81},
+    {name: "李恩旭", math: 89, chinese: 85.5, total: 174.5},
+    {name: "王嘉亨", math: 95, chinese: 96, total: 191},
+    {name: "房俊汐", math: 93, chinese: 95, total: 188},
+    {name: "王柏轩", math: 97, chinese: 96, total: 193},
+    {name: "李易宸", math: 86, chinese: 94, total: 180},
+    {name: "刘闯嘉", math: 85, chinese: 75.5, total: 160.5},
+    {name: "高博", math: 79, chinese: 40, total: 119},
+    {name: "张恒瑞", math: 88, chinese: 90.5, total: 178.5},
+    {name: "杨一凡", math: 89, chinese: 77.5, total: 166.5},
+    {name: "高翔", math: 91, chinese: 64.5, total: 155.5},
+    {name: "连俊博", math: 91, chinese: 93, total: 184},
+    {name: "王敏博", math: 38, chinese: 3, total: 41},
+    {name: "杨瑞", math: 86, chinese: 83, total: 169},
+    {name: "姜瑷青", math: 77, chinese: 89, total: 166},
+    {name: "王枝然", math: 70, chinese: 62, total: 132},
+    {name: "高雨诺", math: 90, chinese: 94, total: 184},
+    {name: "王溪", math: 98, chinese: 99, total: 197},
+    {name: "单予希", math: 76, chinese: 85, total: 161},
+    {name: "张帆桐", math: 91, chinese: 92, total: 183},
+    {name: "姜玉彤", math: 94, chinese: 92.5, total: 186.5},
+    {name: "赵明庄", math: 85, chinese: 86.5, total: 171.5},
+    {name: "吴优", math: 99, chinese: 94, total: 193},
+    {name: "崔说兮", math: 71, chinese: 91.5, total: 162.5},
+    {name: "毕语桐", math: 76, chinese: 65, total: 141},
+    {name: "张昱宸", math: 97, chinese: 92.5, total: 189.5},
+    {name: "阎木晴", math: 92, chinese: 87, total: 179},
+    {name: "李沐格", math: 96, chinese: 84, total: 180},
+    {name: "李梓齐", math: 98, chinese: 83.5, total: 181.5},
+    {name: "李雅若", math: 75, chinese: 45, total: 120},
+    {name: "梁语涵", math: 79, chinese: 77.5, total: 156.5},
+    {name: "赵一桐", math: 80, chinese: 27, total: 107},
+    {name: "姜伊卓", math: 84, chinese: 89.5, total: 173.5},
+    {name: "吴欣阳", math: 88, chinese: 85.5, total: 173.5},
+    {name: "谢思蕊", math: 93, chinese: 81.5, total: 174.5},
+    {name: "路紫珺", math: 76, chinese: 81.5, total: 157.5},
+    {name: "杨木子", math: 97, chinese: 93, total: 190},
+    {name: "于小涵", math: 97, chinese: 90, total: 187}
+];
+
+// 统计函数
+const mathScores = students.map(s => s.math);
+const chineseScores = students.map(s => s.chinese);
+const totalScores = students.map(s => s.total);
+const sorted = [...students].sort((a,b) => b.total - a.total);
+sorted.forEach((s,i) => s.rank = i + 1);
+students.forEach(s => s.rank = sorted.find(x => x.name === s.name).rank);
+
+const sum = arr => arr.reduce((a,b) => a+b, 0);
+const avg = arr => sum(arr) / arr.length;
+const max = arr => Math.max(...arr);
+const min = arr => Math.min(...arr);
+const std = arr => { 
+    const m = avg(arr); 
+    return Math.sqrt(arr.reduce((s,v) => s + (v-m)**2, 0) / arr.length); 
+};
+const median = arr => { 
+    const s = [...arr].sort((a,b)=>a-b); 
+    const m = Math.floor(s.length/2); 
+    return s.length%2 ? s[m] : (s[m-1]+s[m])/2; 
+};
+
+const mathAvg = avg(mathScores);
+const chineseAvg = avg(chineseScores);
+const totalAvg = avg(totalScores);
+
+console.log('统计数据计算完成:', { mathAvg, chineseAvg, totalAvg });
+
+// 更新统计卡片
+document.getElementById('mathAvg').textContent = mathAvg.toFixed(1);
+document.getElementById('mathInfo').textContent = `最高${max(mathScores)} 最低${min(mathScores)}`;
+document.getElementById('chineseAvg').textContent = chineseAvg.toFixed(1);
+document.getElementById('chineseInfo').textContent = `最高${max(chineseScores)} 最低${min(chineseScores)}`;
+document.getElementById('totalAvg').textContent = totalAvg.toFixed(1);
+document.getElementById('totalInfo').textContent = `最高${max(totalScores)} 最低${min(totalScores)}`;
+document.getElementById('failCount').textContent = students.filter(s => s.math < 60 || s.chinese < 60).length;
+document.getElementById('excellentCount').textContent = students.filter(s => s.total >= 180).length;
+
+// 重点关注学生表格
+const criticalStudents = students.filter(s => s.total < 140 || s.math < 60 || s.chinese < 60);
+criticalStudents.sort((a,b) => a.total - b.total);
+const criticalTbody = document.querySelector('#criticalTable tbody');
+criticalStudents.forEach(s => {
+    let problems = [], suggestions = [];
+    if (s.math < 60) { 
+        problems.push('数学不及格'); 
+        suggestions.push('加强数学基础训练'); 
+    }
+    if (s.chinese < 60) { 
+        problems.push('语文不及格'); 
+        suggestions.push('加强语文阅读理解'); 
+    }
+    if (s.total < 100) { 
+        problems.push('总分极低'); 
+        suggestions.push('需要一对一辅导'); 
+    }
+    else if (s.total < 140) { 
+        problems.push('总分偏低'); 
+        suggestions.push('需要课后补习'); 
+    }
+    if (Math.abs(s.math - s.chinese) > 30) { 
+        problems.push('严重偏科'); 
+        suggestions.push('平衡两科学习时间'); 
+    }
+    const tr = document.createElement('tr');
+    tr.className = s.total < 100 ? 'danger' : 'warning-row';
+    tr.innerHTML = `<td><strong>${s.name}</strong></td><td>${s.math}</td><td>${s.chinese}</td><td>${s.total}</td><td>${s.rank}/45</td><td>${problems.join('、')}</td><td>${suggestions.join('；')}</td>`;
+    criticalTbody.appendChild(tr);
+});
+
+// 数学不及格表格
+const mathFailTbody = document.querySelector('#mathFailTable tbody');
+students.filter(s => s.math < 60).sort((a,b) => a.math - b.math).forEach(s => {
+    const tr = document.createElement('tr');
+    tr.className = 'danger';
+    tr.innerHTML = `<td>${s.name}</td><td>${s.math}</td><td>-${60 - s.math}分</td>`;
+    mathFailTbody.appendChild(tr);
+});
+if (mathFailTbody.children.length === 0) {
+    mathFailTbody.innerHTML = '<tr><td colspan="3">无</td></tr>';
+}
+
+// 语文不及格表格
+const chineseFailTbody = document.querySelector('#chineseFailTable tbody');
+students.filter(s => s.chinese < 60).sort((a,b) => a.chinese - b.chinese).forEach(s => {
+    const tr = document.createElement('tr');
+    tr.className = 'danger';
+    tr.innerHTML = `<td>${s.name}</td><td>${s.chinese}</td><td>-${(60 - s.chinese).toFixed(1)}分</td>`;
+    chineseFailTbody.appendChild(tr);
+});
+if (chineseFailTbody.children.length === 0) {
+    chineseFailTbody.innerHTML = '<tr><td colspan="3">无</td></tr>';
+}
+
+// 偏科学生表格
+const imbalanceTbody = document.querySelector('#imbalanceTable tbody');
+students.filter(s => Math.abs(s.math - s.chinese) > 25).sort((a,b) => Math.abs(b.math - b.chinese) - Math.abs(a.math - a.chinese)).forEach(s => {
+    const diff = s.math - s.chinese;
+    const tr = document.createElement('tr');
+    tr.className = 'warning-row';
+    tr.innerHTML = `<td>${s.name}</td><td>${s.math}</td><td>${s.chinese}</td><td>${Math.abs(diff).toFixed(1)}</td><td>${diff > 0 ? '偏数学' : '偏语文'}</td>`;
+    imbalanceTbody.appendChild(tr);
+});
+if (imbalanceTbody.children.length === 0) {
+    imbalanceTbody.innerHTML = '<tr><td colspan="5">无</td></tr>';
+}
+
+// 详细统计表格
+const statsTbody = document.querySelector('#statsTable');
+const statsData = [
+    ['平均分', mathAvg.toFixed(2), chineseAvg.toFixed(2), totalAvg.toFixed(2)],
+    ['最高分', max(mathScores), max(chineseScores), max(totalScores)],
+    ['最低分', min(mathScores), min(chineseScores), min(totalScores)],
+    ['中位数', median(mathScores).toFixed(1), median(chineseScores).toFixed(1), median(totalScores).toFixed(1)],
+    ['标准差', std(mathScores).toFixed(2), std(chineseScores).toFixed(2), std(totalScores).toFixed(2)],
+    ['及格率', (students.filter(s=>s.math>=60).length/45*100).toFixed(1)+'%', (students.filter(s=>s.chinese>=60).length/45*100).toFixed(1)+'%', '-'],
+    ['优秀率(≥90)', (students.filter(s=>s.math>=90).length/45*100).toFixed(1)+'%', (students.filter(s=>s.chinese>=90).length/45*100).toFixed(1)+'%', (students.filter(s=>s.total>=180).length/45*100).toFixed(1)+'%'],
+    ['满分人数', students.filter(s=>s.math===100).length, students.filter(s=>s.chinese===100).length, '-']
+];
+statsData.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = row.map((v,i) => i===0 ? `<td><strong>${v}</strong></td>` : `<td>${v}</td>`).join('');
+    statsTbody.appendChild(tr);
+});
+
+// 分数段统计函数
+function createRangeTable(tableId, scores, ranges, colors) {
+    const tbody = document.querySelector(`#${tableId} tbody`);
+    const total = scores.length;
+    ranges.forEach(([min, max, label], i) => {
+        const count = scores.filter(s => s >= min && s < max).length;
+        const pct = (count / total * 100).toFixed(1);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${label}</td><td>${count}</td><td>${pct}%</td><td><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${colors[i]}"></div></div></td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+const rangeColors = ['#e74c3c','#f39c12','#f1c40f','#2ecc71','#27ae60'];
+createRangeTable('mathRangeTable', mathScores, [[0,60,'不及格(<60)'],[60,70,'60-69'],[70,80,'70-79'],[80,90,'80-89'],[90,101,'优秀(90+)']], rangeColors);
+createRangeTable('chineseRangeTable', chineseScores, [[0,60,'不及格(<60)'],[60,70,'60-69'],[70,80,'70-79'],[80,90,'80-89'],[90,101,'优秀(90+)']], rangeColors);
+createRangeTable('totalRangeTable', totalScores, [[0,120,'<120'],[120,150,'120-149'],[150,170,'150-169'],[170,185,'170-184'],[185,200,'优秀(185+)']], rangeColors);
+
+// 全班成绩明细表
+const fullTbody = document.querySelector('#fullTable tbody');
+function getGrade(score, type) {
+    if (type === 'single') {
+        if (score >= 95) return '<span class="badge badge-success">优秀</span>';
+        if (score >= 90) return '<span class="badge badge-info">良好</span>';
+        if (score >= 80) return '<span class="badge badge-info">中等</span>';
+        if (score >= 60) return '<span class="badge badge-warning">及格</span>';
+        return '<span class="badge badge-danger">不及格</span>';
+    } else {
+        if (score >= 185) return '<span class="badge badge-success">优秀</span>';
+        if (score >= 170) return '<span class="badge badge-info">良好</span>';
+        if (score >= 150) return '<span class="badge badge-warning">中等</span>';
+        if (score >= 120) return '<span class="badge badge-warning">及格</span>';
+        return '<span class="badge badge-danger">需关注</span>';
+    }
+}
+sorted.forEach((s, i) => {
+    const diff = s.total - totalAvg;
+    const tr = document.createElement('tr');
+    if (i < 3) tr.className = 'excellent';
+    else if (s.total < 140 || s.math < 60 || s.chinese < 60) tr.className = 'danger';
+    tr.innerHTML = `<td>${i+1}</td><td>${s.name}</td><td>${s.math}</td><td>${getGrade(s.math,'single')}</td><td>${s.chinese}</td><td>${getGrade(s.chinese,'single')}</td><td><strong>${s.total}</strong></td><td style="color:${diff>=0?'#27ae60':'#e74c3c'}">${diff>=0?'+':''}${diff.toFixed(1)}</td><td>${getGrade(s.total,'total')}</td>`;
+    fullTbody.appendChild(tr);
+});
+
+// 试卷难度分析
+document.getElementById('mathSummary').innerHTML = `<strong>数学试卷分析：</strong>平均分${mathAvg.toFixed(1)}分，及格率${(students.filter(s=>s.math>=60).length/45*100).toFixed(1)}%，优秀率${(students.filter(s=>s.math>=90).length/45*100).toFixed(1)}%。试卷难度${mathAvg > 85 ? '偏易' : mathAvg > 75 ? '适中' : '偏难'}。`;
+document.getElementById('chineseSummary').innerHTML = `<strong>语文试卷分析：</strong>平均分${chineseAvg.toFixed(1)}分，及格率${(students.filter(s=>s.chinese>=60).length/45*100).toFixed(1)}%，优秀率${(students.filter(s=>s.chinese>=90).length/45*100).toFixed(1)}%。试卷难度${chineseAvg > 85 ? '偏易' : chineseAvg > 75 ? '适中' : '偏难'}。`;
+
+// 图表
+function getDistribution(scores, ranges) {
+    return ranges.map(([min, max, label]) => ({ 
+        label, 
+        count: scores.filter(s => s >= min && s < max).length 
+    }));
+}
+
+console.log('开始创建图表...');
+
+// 检查Chart.js是否加载
+if (typeof Chart === 'undefined') {
+    console.error('Chart.js未加载！');
+    alert('Chart.js库加载失败，请检查网络连接！');
+} else {
+    console.log('Chart.js版本:', Chart.version);
+}
+
+const mathRanges = [[0,60,'不及格'],[60,70,'60-69'],[70,80,'70-79'],[80,90,'80-89'],[90,101,'90+']];
+const mathDist = getDistribution(mathScores, mathRanges);
+console.log('数学分布图数据:', mathDist);
+
+try {
+    new Chart(document.getElementById('mathDistChart'), {
+    type: 'bar',
+    data: { 
+        labels: mathDist.map(d => d.label), 
+        datasets: [{ 
+            label: '人数', 
+            data: mathDist.map(d => d.count), 
+            backgroundColor: rangeColors 
+        }] 
+    },
+    options: { 
+        plugins: { legend: { display: false } }, 
+        scales: { y: { beginAtZero: true } } 
+    }
+});
+console.log('✓ 数学分布图创建成功');
+} catch(e) {
+    console.error('✗ 数学分布图创建失败:', e);
+}
+
+const chineseDist = getDistribution(chineseScores, mathRanges);
+new Chart(document.getElementById('chineseDistChart'), {
+    type: 'bar',
+    data: { 
+        labels: chineseDist.map(d => d.label), 
+        datasets: [{ 
+            label: '人数', 
+            data: chineseDist.map(d => d.count), 
+            backgroundColor: rangeColors 
+        }] 
+    },
+    options: { 
+        plugins: { legend: { display: false } }, 
+        scales: { y: { beginAtZero: true } } 
+    }
+});
+
+const totalRanges = [[0,120,'<120'],[120,150,'120-149'],[150,170,'150-169'],[170,185,'170-184'],[185,200,'185+']];
+const totalDist = getDistribution(totalScores, totalRanges);
+new Chart(document.getElementById('totalPieChart'), {
+    type: 'doughnut',
+    data: { 
+        labels: totalDist.map(d => `${d.label} (${d.count}人)`), 
+        datasets: [{ 
+            data: totalDist.map(d => d.count), 
+            backgroundColor: rangeColors 
+        }] 
+    }
+});
+
+new Chart(document.getElementById('scatterChart'), {
+    type: 'scatter',
+    data: { 
+        datasets: [
+            { 
+                label: '学生', 
+                data: students.map(s => ({x: s.math, y: s.chinese, name: s.name})), 
+                backgroundColor: students.map(s => s.total < 140 ? '#e74c3c' : '#3498db'), 
+                pointRadius: 6 
+            },
+            {
+                label: '趋势线',
+                data: [{x: 0, y: 0}, {x: 100, y: 100}],
+                type: 'line',
+                borderColor: '#95a5a6',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                pointRadius: 0,
+                fill: false
+            }
+        ] 
+    },
+    options: { 
+        scales: { 
+            x: { title: { display: true, text: '数学' }, min: 0, max: 100 }, 
+            y: { title: { display: true, text: '语文' }, min: 0, max: 100 } 
+        }, 
+        plugins: { 
+            tooltip: { 
+                callbacks: { 
+                    label: ctx => {
+                        if (ctx.datasetIndex === 0) {
+                            return `${students[ctx.dataIndex].name}: 数学${ctx.raw.x}, 语文${ctx.raw.y}`;
+                        }
+                        return '';
+                    }
+                } 
+            } 
+        } 
+    }
+});
+
+// 前10名学生总分对比
+const top10 = sorted.slice(0, 10);
+new Chart(document.getElementById('top10Chart'), {
+    type: 'bar',
+    data: { 
+        labels: top10.map(s => s.name), 
+        datasets: [{ 
+            label: '总分', 
+            data: top10.map(s => s.total), 
+            backgroundColor: '#27ae60'
+        }] 
+    },
+    options: { 
+        indexAxis: 'y',
+        plugins: { legend: { display: false } }, 
+        scales: { x: { min: 170, max: 200 } } 
+    }
+});
+
+// 后10名学生总分对比
+const bottom10 = sorted.slice(-10).reverse();
+new Chart(document.getElementById('bottom10Chart'), {
+    type: 'bar',
+    data: { 
+        labels: bottom10.map(s => s.name), 
+        datasets: [{ 
+            label: '总分', 
+            data: bottom10.map(s => s.total), 
+            backgroundColor: bottom10.map(s => s.total < 140 ? '#e74c3c' : '#f39c12')
+        }] 
+    },
+    options: { 
+        indexAxis: 'y',
+        plugins: { legend: { display: false } }, 
+        scales: { x: { min: 0, max: 200 } } 
+    }
+});
+
+// 及格率与优秀率对比
+const mathPassRate = students.filter(s => s.math >= 60).length / 45 * 100;
+const chinesePassRate = students.filter(s => s.chinese >= 60).length / 45 * 100;
+const mathExcellentRate = students.filter(s => s.math >= 90).length / 45 * 100;
+const chineseExcellentRate = students.filter(s => s.chinese >= 90).length / 45 * 100;
+
+new Chart(document.getElementById('passRateChart'), {
+    type: 'bar',
+    data: { 
+        labels: ['及格率(≥60)', '优秀率(≥90)'],
+        datasets: [
+            { label: '数学', data: [mathPassRate, mathExcellentRate], backgroundColor: '#3498db' },
+            { label: '语文', data: [chinesePassRate, chineseExcellentRate], backgroundColor: '#e74c3c' }
+        ]
+    },
+    options: { 
+        plugins: { legend: { position: 'top' } }, 
+        scales: { y: { max: 100, ticks: { callback: v => v + '%' } } } 
+    }
+});
+
+// 成绩分布箱线图（使用柱状图模拟）
+const getQuartile = (arr, q) => {
+    const sorted = [...arr].sort((a, b) => a - b);
+    const pos = (sorted.length - 1) * q;
+    const base = Math.floor(pos);
+    const rest = pos - base;
+    if (sorted[base + 1] !== undefined) {
+        return sorted[base] + rest * (sorted[base + 1] - sorted[base]);
+    } else {
+        return sorted[base];
+    }
+};
+
+const mathQuartiles = [
+    min(mathScores), 
+    getQuartile(mathScores, 0.25), 
+    median(mathScores), 
+    getQuartile(mathScores, 0.75), 
+    max(mathScores)
+];
+const chineseQuartiles = [
+    min(chineseScores), 
+    getQuartile(chineseScores, 0.25), 
+    median(chineseScores), 
+    getQuartile(chineseScores, 0.75), 
+    max(chineseScores)
+];
+
+new Chart(document.getElementById('boxPlotChart'), {
+    type: 'bar',
+    data: { 
+        labels: ['最低分', '下四分位', '中位数', '上四分位', '最高分'],
+        datasets: [
+            { label: '数学', data: mathQuartiles, backgroundColor: '#3498db' },
+            { label: '语文', data: chineseQuartiles, backgroundColor: '#e74c3c' }
+        ]
+    },
+    options: { 
+        plugins: { legend: { position: 'top' } }, 
+        scales: { y: { min: 0, max: 100 } } 
+    }
+});
+
+// ========== 深度试卷分析图表 ==========
+
+// 1. 偏科分析雷达图
+new Chart(document.getElementById('radarChart'), {
+    type: 'radar',
+    data: {
+        labels: ['平均分', '及格率', '优秀率', '最高分', '中位数'],
+        datasets: [
+            {
+                label: '数学',
+                data: [
+                    mathAvg,
+                    mathPassRate,
+                    mathExcellentRate,
+                    max(mathScores),
+                    median(mathScores)
+                ],
+                backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                borderColor: '#3498db',
+                borderWidth: 2
+            },
+            {
+                label: '语文',
+                data: [
+                    chineseAvg,
+                    chinesePassRate,
+                    chineseExcellentRate,
+                    max(chineseScores),
+                    median(chineseScores)
+                ],
+                backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                borderColor: '#e74c3c',
+                borderWidth: 2
+            }
+        ]
+    },
+    options: {
+        scales: {
+            r: {
+                beginAtZero: true,
+                max: 100
+            }
+        },
+        plugins: {
+            legend: { position: 'top' }
+        }
+    }
+});
+
+// 2. 偏科严重度分布
+const biasData = students.map(s => s.math - s.chinese);
+const biasRanges = [
+    [-70, -40, '严重偏语文'],
+    [-40, -25, '偏语文'],
+    [-25, -10, '轻微偏语文'],
+    [-10, 10, '均衡'],
+    [10, 25, '轻微偏数学'],
+    [25, 40, '偏数学'],
+    [40, 70, '严重偏数学']
+];
+const biasCounts = biasRanges.map(([min, max]) => 
+    biasData.filter(d => d >= min && d < max).length
+);
+
+new Chart(document.getElementById('biasDistChart'), {
+    type: 'bar',
+    data: {
+        labels: biasRanges.map(r => r[2]),
+        datasets: [{
+            label: '学生人数',
+            data: biasCounts,
+            backgroundColor: [
+                '#c0392b', '#e74c3c', '#f39c12',
+                '#27ae60',
+                '#f39c12', '#e74c3c', '#c0392b'
+            ]
+        }]
+    },
+    options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+});
+
+// 3. 分数段人数对比
+const scoreRanges = [[0,60,'<60'],[60,70,'60-69'],[70,80,'70-79'],[80,90,'80-89'],[90,101,'90+']];
+const mathRangeCounts = scoreRanges.map(([min, max]) => 
+    mathScores.filter(s => s >= min && s < max).length
+);
+const chineseRangeCounts = scoreRanges.map(([min, max]) => 
+    chineseScores.filter(s => s >= min && s < max).length
+);
+
+new Chart(document.getElementById('scoreRangeCompareChart'), {
+    type: 'bar',
+    data: {
+        labels: scoreRanges.map(r => r[2]),
+        datasets: [
+            { label: '数学', data: mathRangeCounts, backgroundColor: '#3498db' },
+            { label: '语文', data: chineseRangeCounts, backgroundColor: '#e74c3c' }
+        ]
+    },
+    options: {
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 2 } } }
+    }
+});
+
+// 4. 成绩进步空间分析
+const improvementLevels = [
+    students.filter(s => s.total < 120).length,  // 需重点关注
+    students.filter(s => s.total >= 120 && s.total < 150).length,  // 有较大提升空间
+    students.filter(s => s.total >= 150 && s.total < 170).length,  // 有提升空间
+    students.filter(s => s.total >= 170 && s.total < 185).length,  // 稳定发挥
+    students.filter(s => s.total >= 185).length   // 优秀
+];
+
+new Chart(document.getElementById('improvementChart'), {
+    type: 'bar',
+    data: {
+        labels: ['需重点关注\n(<120)', '较大提升空间\n(120-149)', '有提升空间\n(150-169)', '稳定发挥\n(170-184)', '优秀\n(≥185)'],
+        datasets: [{
+            label: '学生人数',
+            data: improvementLevels,
+            backgroundColor: ['#e74c3c', '#f39c12', '#f1c40f', '#3498db', '#27ae60']
+        }]
+    },
+    options: {
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 2 } } }
+    }
+});
+
+// 5. 双科成绩密度热力分布（用气泡图模拟）
+const heatmapData = [];
+for (let m = 0; m <= 100; m += 20) {
+    for (let c = 0; c <= 100; c += 20) {
+        const count = students.filter(s => 
+            s.math >= m && s.math < m + 20 && 
+            s.chinese >= c && s.chinese < c + 20
+        ).length;
+        if (count > 0) {
+            heatmapData.push({x: m + 10, y: c + 10, r: count * 3});
+        }
+    }
+}
+
+new Chart(document.getElementById('heatmapChart'), {
+    type: 'bubble',
+    data: {
+        datasets: [{
+            label: '学生密度',
+            data: heatmapData,
+            backgroundColor: 'rgba(52, 152, 219, 0.6)',
+            borderColor: '#3498db'
+        }]
+    },
+    options: {
+        scales: {
+            x: { title: { display: true, text: '数学分数段' }, min: 0, max: 100 },
+            y: { title: { display: true, text: '语文分数段' }, min: 0, max: 100 }
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: ctx => `该区域约 ${Math.round(ctx.raw.r / 3)} 人`
+                }
+            }
+        }
+    }
+});
+
+// 6. 试卷区分度分析（累计分布曲线）
+const mathSorted = [...mathScores].sort((a, b) => a - b);
+const chineseSorted = [...chineseScores].sort((a, b) => a - b);
+const cumulativeMath = mathSorted.map((_, i) => ((i + 1) / mathSorted.length * 100));
+const cumulativeChinese = chineseSorted.map((_, i) => ((i + 1) / chineseSorted.length * 100));
+
+new Chart(document.getElementById('discriminationChart'), {
+    type: 'line',
+    data: {
+        datasets: [
+            {
+                label: '数学累计分布',
+                data: mathSorted.map((score, i) => ({x: score, y: cumulativeMath[i]})),
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                fill: true,
+                tension: 0.4
+            },
+            {
+                label: '语文累计分布',
+                data: chineseSorted.map((score, i) => ({x: score, y: cumulativeChinese[i]})),
+                borderColor: '#e74c3c',
+                backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                fill: true,
+                tension: 0.4
+            }
+        ]
+    },
+    options: {
+        scales: {
+            x: { title: { display: true, text: '分数' }, min: 0, max: 100 },
+            y: { title: { display: true, text: '累计百分比(%)' }, min: 0, max: 100 }
+        },
+        plugins: {
+            legend: { position: 'top' }
+        }
+    }
+});
+</script>
+</body>
+</html>

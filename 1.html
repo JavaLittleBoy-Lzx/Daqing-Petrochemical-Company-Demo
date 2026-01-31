@@ -1,0 +1,150 @@
+// Visualization script for response data
+var template = `
+<style>
+    .container { font-family: Arial, sans-serif; padding: 20px; }
+    .message { color: #666; font-style: italic; margin-bottom: 15px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background-color: #4a90d9; color: white; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    tr:hover { background-color: #f1f1f1; }
+    .chart-container { margin-top: 20px; }
+</style>
+
+{{#if hasChartData}}
+<div class="container">
+    <h3>Bar Chart Visualization</h3>
+    <div class="chart-container">
+        <canvas id="myChart" height="100"></canvas>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+<script>
+    var ctx = document.getElementById("myChart");
+    pm.getData(function (err, value) {
+        var myChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: value.chartLabels,
+                datasets: [{
+                    label: value.numericKey,
+                    data: value.chartValues,
+                    backgroundColor: "rgba(74, 144, 217, 0.6)",
+                    borderColor: "rgba(74, 144, 217, 1)",
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                legend: { display: true },
+                title: {
+                    display: true,
+                    text: "Data Visualization"
+                },
+                scales: {
+                    yAxes: [{
+                        ticks: { beginAtZero: true }
+                    }]
+                }
+            }
+        });
+    });
+</script>
+{{else}}
+<div class="container">
+    <p class="message">No numerical array found for charting</p>
+    <h3>Response Data (Key-Value Table)</h3>
+    <table>
+        <tr>
+            <th>Key</th>
+            <th>Value</th>
+        </tr>
+        {{#each tableData}}
+        <tr>
+            <td>{{key}}</td>
+            <td>{{value}}</td>
+        </tr>
+        {{/each}}
+    </table>
+</div>
+{{/if}}
+`;
+
+function constructVisualizerPayload() {
+    var response = pm.response.json();
+    var hasChartData = false;
+    var chartLabels = [];
+    var chartValues = [];
+    var numericKey = "";
+    var labelKey = "";
+    var tableData = [];
+    
+    // Check for array at top-level or in response.data
+    var dataArray = null;
+    
+    if (Array.isArray(response)) {
+        dataArray = response;
+    } else if (response.data && Array.isArray(response.data)) {
+        dataArray = response.data;
+    } else if (response.data && typeof response.data === 'object') {
+        // Check for arrays inside response.data (e.g., response.data.items)
+        for (var key in response.data) {
+            if (Array.isArray(response.data[key]) && response.data[key].length > 0) {
+                dataArray = response.data[key];
+                break;
+            }
+        }
+    }
+    
+    // If we found an array, try to extract numeric data for charting
+    if (dataArray && dataArray.length > 0) {
+        var firstItem = dataArray[0];
+        
+        if (typeof firstItem === 'object' && firstItem !== null) {
+            // Find first numeric property and a label property
+            for (var prop in firstItem) {
+                if (typeof firstItem[prop] === 'number' && !numericKey) {
+                    numericKey = prop;
+                } else if (typeof firstItem[prop] === 'string' && !labelKey) {
+                    labelKey = prop;
+                }
+            }
+            
+            if (numericKey) {
+                hasChartData = true;
+                dataArray.forEach(function(item, index) {
+                    chartLabels.push(labelKey ? String(item[labelKey]) : "Item " + (index + 1));
+                    chartValues.push(item[numericKey] || 0);
+                });
+            }
+        } else if (typeof firstItem === 'number') {
+            // Array of numbers
+            hasChartData = true;
+            numericKey = "Value";
+            dataArray.forEach(function(val, index) {
+                chartLabels.push("Item " + (index + 1));
+                chartValues.push(val);
+            });
+        }
+    }
+    
+    // If no chart data, prepare table data from response
+    if (!hasChartData) {
+        for (var k in response) {
+            var val = response[k];
+            if (typeof val === 'object') {
+                val = JSON.stringify(val);
+            }
+            tableData.push({ key: k, value: String(val) });
+        }
+    }
+    
+    return {
+        hasChartData: hasChartData,
+        chartLabels: chartLabels,
+        chartValues: chartValues,
+        numericKey: numericKey,
+        tableData: tableData
+    };
+}
+
+pm.visualizer.set(template, constructVisualizerPayload());

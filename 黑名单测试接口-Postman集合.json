@@ -1,0 +1,307 @@
+{
+  "info": {
+    "name": "车辆黑名单同步测试",
+    "description": "测试车辆黑名单同步的各种场景",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. 查询黑名单状态",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/sync/test/blacklist/query?plateNumber=黑A99999",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "sync", "test", "blacklist", "query"],
+          "query": [
+            {
+              "key": "plateNumber",
+              "value": "黑A99999",
+              "description": "车牌号"
+            }
+          ]
+        },
+        "description": "查询指定车牌号的黑名单状态"
+      }
+    },
+    {
+      "name": "2.1 添加新黑名单-单门临时",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/sync/test/blacklist/add?plateNumber=黑A99999&gateNames=化工西门&ownerName=测试用户&startTime=2026-01-15 00:00:00&endTime=2026-06-30 23:59:59",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "sync", "test", "blacklist", "add"],
+          "query": [
+            {
+              "key": "plateNumber",
+              "value": "黑A99999",
+              "description": "车牌号"
+            },
+            {
+              "key": "gateNames",
+              "value": "化工西门",
+              "description": "门名称列表，逗号分隔"
+            },
+            {
+              "key": "ownerName",
+              "value": "测试用户",
+              "description": "车主姓名"
+            },
+            {
+              "key": "startTime",
+              "value": "2026-01-15 00:00:00",
+              "description": "开始时间"
+            },
+            {
+              "key": "endTime",
+              "value": "2026-06-30 23:59:59",
+              "description": "结束时间"
+            }
+          ]
+        },
+        "description": "添加单门临时黑名单"
+      }
+    },
+    {
+      "name": "2.2 添加新黑名单-多门临时",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/sync/test/blacklist/add?plateNumber=黑A88888&gateNames=化工西门,化肥西门,复合肥南门&ownerName=测试用户2&startTime=2026-01-15 00:00:00&endTime=2026-12-31 23:59:59",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "sync", "test", "blacklist", "add"],
+          "query": [
+            {
+              "key": "plateNumber",
+              "value": "黑A88888",
+              "description": "车牌号"
+            },
+            {
+              "key": "gateNames",
+              "value": "化工西门,化肥西门,复合肥南门",
+              "description": "门名称列表，逗号分隔"
+            },
+            {
+              "key": "ownerName",
+              "value": "测试用户2",
+              "description": "车主姓名"
+            },
+            {
+              "key": "startTime",
+              "value": "2026-01-15 00:00:00",
+              "description": "开始时间"
+            },
+            {
+              "key": "endTime",
+              "value": "2026-12-31 23:59:59",
+              "description": "结束时间"
+            }
+          ]
+        },
+        "description": "添加多门临时黑名单"
+      }
+    },
+    {
+      "name": "2.3 添加新黑名单-永久",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/sync/test/blacklist/add?plateNumber=黑A77777&gateNames=化工西门&ownerName=测试用户3",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "sync", "test", "blacklist", "add"],
+          "query": [
+            {
+              "key": "plateNumber",
+              "value": "黑A77777",
+              "description": "车牌号"
+            },
+            {
+              "key": "gateNames",
+              "value": "化工西门",
+              "description": "门名称列表，逗号分隔"
+            },
+            {
+              "key": "ownerName",
+              "value": "测试用户3",
+              "description": "车主姓名"
+            }
+          ]
+        },
+        "description": "添加永久黑名单（不传endTime）"
+      }
+    },
+    {
+      "name": "3.1 更新权限-单门改多门",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/sync/test/blacklist/update-permission?plateNumber=黑A99999&newGateNames=化工西门,化肥西门&ownerName=测试用户",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "sync", "test", "blacklist", "update-permission"],
+          "query": [
+            {
+              "key": "plateNumber",
+              "value": "黑A99999",
+              "description": "车牌号"
+            },
+            {
+              "key": "newGateNames",
+              "value": "化工西门,化肥西门",
+              "description": "新的门名称列表"
+            },
+            {
+              "key": "ownerName",
+              "value": "测试用户",
+              "description": "车主姓名"
+            }
+          ]
+        },
+        "description": "更新黑名单权限：从单门改为多门"
+      }
+    },
+    {
+      "name": "3.2 更新权限-多门改单门",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/sync/test/blacklist/update-permission?plateNumber=黑A99999&newGateNames=化工西门&ownerName=测试用户",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "sync", "test", "blacklist", "update-permission"],
+          "query": [
+            {
+              "key": "plateNumber",
+              "value": "黑A99999",
+              "description": "车牌号"
+            },
+            {
+              "key": "newGateNames",
+              "value": "化工西门",
+              "description": "新的门名称列表"
+            },
+            {
+              "key": "ownerName",
+              "value": "测试用户",
+              "description": "车主姓名"
+            }
+          ]
+        },
+        "description": "更新黑名单权限：从多门改为单门"
+      }
+    },
+    {
+      "name": "4.1 更新时间-延长有效期",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/sync/test/blacklist/update-time?plateNumber=黑A99999&newStartTime=2026-01-15 00:00:00&newEndTime=2026-12-31 23:59:59&ownerName=测试用户",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "sync", "test", "blacklist", "update-time"],
+          "query": [
+            {
+              "key": "plateNumber",
+              "value": "黑A99999",
+              "description": "车牌号"
+            },
+            {
+              "key": "newStartTime",
+              "value": "2026-01-15 00:00:00",
+              "description": "新的开始时间"
+            },
+            {
+              "key": "newEndTime",
+              "value": "2026-12-31 23:59:59",
+              "description": "新的结束时间"
+            },
+            {
+              "key": "ownerName",
+              "value": "测试用户",
+              "description": "车主姓名"
+            }
+          ]
+        },
+        "description": "更新黑名单时间：延长有效期到年底"
+      }
+    },
+    {
+      "name": "4.2 更新时间-缩短有效期",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/sync/test/blacklist/update-time?plateNumber=黑A99999&newStartTime=2026-01-15 00:00:00&newEndTime=2026-03-31 23:59:59&ownerName=测试用户",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "sync", "test", "blacklist", "update-time"],
+          "query": [
+            {
+              "key": "plateNumber",
+              "value": "黑A99999",
+              "description": "车牌号"
+            },
+            {
+              "key": "newStartTime",
+              "value": "2026-01-15 00:00:00",
+              "description": "新的开始时间"
+            },
+            {
+              "key": "newEndTime",
+              "value": "2026-03-31 23:59:59",
+              "description": "新的结束时间"
+            },
+            {
+              "key": "ownerName",
+              "value": "测试用户",
+              "description": "车主姓名"
+            }
+          ]
+        },
+        "description": "更新黑名单时间：缩短有效期"
+      }
+    },
+    {
+      "name": "5. 删除黑名单",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/sync/test/blacklist/delete?plateNumber=黑A99999",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["api", "sync", "test", "blacklist", "delete"],
+          "query": [
+            {
+              "key": "plateNumber",
+              "value": "黑A99999",
+              "description": "车牌号"
+            }
+          ]
+        },
+        "description": "删除黑名单（模拟注销状态）"
+      }
+    }
+  ]
+}
